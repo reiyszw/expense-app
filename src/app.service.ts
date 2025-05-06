@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ReportType, data } from './data';
 import { v4 as uuid } from 'uuid';
+import { ReportResponseDto } from 'src/dtos/report.dto';
 
 interface ReportData {
   amount: number;
@@ -13,18 +14,34 @@ interface UpdateReport {
 }
 @Injectable()
 export class AppService {
-  getAllReports(type: ReportType) {
-    return data.report.filter((report) => report.type === type);
-  }
+  // getAllReports(type: ReportType): ReportResponseDto[] {
+  //   return data.report
+  //     .filter((report) => report.type === type)
+  //     .map((report) => {
+  //       new ReportResponseDto(report);
+  //     });
+  // }
 
-  getReportById(type: ReportType, id: string) {
-    console.log(type, id);
+  getAllReports(type: ReportType): ReportResponseDto[] {
     return data.report
       .filter((report) => report.type === type)
-      .find((report) => report.id === id);
+      .map((report) => new ReportResponseDto(report));
   }
 
-  createReport(type: ReportType, { amount, source }: ReportData) {
+  getReportById(type: ReportType, id: string): ReportResponseDto | undefined {
+    const report = data.report
+      .filter((report) => report.type === type)
+      .find((report) => report.id === id);
+
+    if (!report) return;
+
+    return new ReportResponseDto(report);
+  }
+
+  createReport(
+    type: ReportType,
+    { amount, source }: ReportData,
+  ): ReportResponseDto {
     const newReport = {
       id: uuid(),
       source,
@@ -34,10 +51,14 @@ export class AppService {
       type,
     };
     data.report.push(newReport);
-    return newReport;
+    return new ReportResponseDto(newReport);
   }
 
-  updateReport(type: ReportType, id: string, body: UpdateReport) {
+  updateReport(
+    type: ReportType,
+    id: string,
+    body: UpdateReport,
+  ): ReportResponseDto | undefined {
     const reportToUpdate = data.report
       .filter((report) => report.type === type)
       .find((report) => report.id === id);
@@ -54,7 +75,7 @@ export class AppService {
       updated_at: new Date(),
     };
 
-    return data.report[reportIndex];
+    return new ReportResponseDto(data.report[reportIndex]);
   }
 
   deleteReport(id: string) {
